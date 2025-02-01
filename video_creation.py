@@ -1,7 +1,7 @@
 import os
 import re
 from moviepy.config import change_settings
-from moviepy.editor import ImageClip, concatenate_videoclips, TextClip, CompositeVideoClip, AudioFileClip, ColorClip
+from moviepy.editor import ImageClip, concatenate_videoclips, TextClip, CompositeVideoClip, AudioFileClip, ColorClip, VideoClip
 import numpy as np
 from text_to_speech import generate_audio
 from datetime import datetime
@@ -41,6 +41,72 @@ def split_script_by_syllables(script_text, syllables_per_chunk=10):
         chunks.append(" ".join(current_chunk))
 
     return chunks
+
+def create_dynamic_image_clip(img_url, duration, width, height):
+    """Create an image clip with random pan and zoom effects"""
+    img_clip = ImageClip(img_url)
+    
+    # Calculate resize dimensions to maintain aspect ratio
+    aspect_ratio = img_clip.w / img_clip.h
+    if aspect_ratio > width/height:  # too wide
+        new_h = height
+        new_w = int(height * aspect_ratio)
+    else:  # too tall
+        new_w = width
+        new_h = int(width / aspect_ratio)
+        
+    # Resize image larger than needed to allow for movement
+    scale_factor = 1.5  # Scale up by 50% to allow room for movement
+    img_clip = img_clip.resize((int(new_w * scale_factor), int(new_h * scale_factor)))
+    
+    # Randomly choose effect type
+    effect_type = random.choice(['zoom_in', 'zoom_out', 'pan_left', 'pan_right', 'pan_up', 'pan_down'])
+    
+    def get_frame(t):
+        progress = t / duration  # 0 to 1
+        
+        if effect_type == 'zoom_in':
+            zoom = 1 - (0.3 * progress)  # Start at 100%, end at 70%
+            pos_x = (img_clip.w - width) // 2
+            pos_y = (img_clip.h - height) // 2
+            
+        elif effect_type == 'zoom_out':
+            zoom = 0.7 + (0.3 * progress)  # Start at 70%, end at 100%
+            pos_x = (img_clip.w - width) // 2
+            pos_y = (img_clip.h - height) // 2
+            
+        elif effect_type == 'pan_left':
+            zoom = 1
+            pos_x = int((img_clip.w - width) * (1 - progress))
+            pos_y = (img_clip.h - height) // 2
+            
+        elif effect_type == 'pan_right':
+            zoom = 1
+            pos_x = int((img_clip.w - width) * progress)
+            pos_y = (img_clip.h - height) // 2
+            
+        elif effect_type == 'pan_up':
+            zoom = 1
+            pos_x = (img_clip.w - width) // 2
+            pos_y = int((img_clip.h - height) * (1 - progress))
+            
+        else:  # pan_down
+            zoom = 1
+            pos_x = (img_clip.w - width) // 2
+            pos_y = int((img_clip.h - height) * progress)
+        
+        # Apply zoom
+        zoomed = img_clip.resize(zoom)
+        
+        # Ensure we don't go out of bounds
+        pos_x = max(0, min(pos_x, zoomed.w - width))
+        pos_y = max(0, min(pos_y, zoomed.h - height))
+        
+        # Crop the frame
+        frame = zoomed.crop(x1=pos_x, y1=pos_y, width=width, height=height)
+        return frame.get_frame(t)
+    
+    return VideoClip(get_frame, duration=duration)
 
 def create_video(images, script_text, output_dir, title):
     # Get current timestamp
@@ -105,31 +171,16 @@ def create_video(images, script_text, output_dir, title):
         looped_images.extend(images)
     looped_images = looped_images[:clips_needed]  # Trim to exact number needed
     
-    # Modify image clips to fit Shorts format with transitions
+    # Modify image clips to fit Shorts format with transitions and effects
     clips = []
     transition_duration = 0.5  # Half second transition
     
-    for img_url in looped_images:  # Use looped_images instead of images
-        img_clip = ImageClip(img_url)
-        # Calculate resize dimensions to maintain aspect ratio
-        aspect_ratio = img_clip.w / img_clip.h
-        if aspect_ratio > width/height:  # too wide
-            new_h = height
-            new_w = int(height * aspect_ratio)
-        else:  # too tall
-            new_w = width
-            new_h = int(width / aspect_ratio)
-            
-        img_clip = (img_clip
-                   .resize((new_w, new_h))
-                   .crop(x1=(new_w - width)//2,
-                        y1=(new_h - height)//2,
-                        width=width,
-                        height=height))
+    for img_url in looped_images:
+        # Create dynamic clip with pan/zoom effect
+        img_clip = create_dynamic_image_clip(img_url, image_duration, width, height)
         
-        # Add fade in and fade out to each clip
+        # Add fade in and fade out
         img_clip = (img_clip
-                   .set_duration(image_duration)
                    .crossfadein(transition_duration)
                    .crossfadeout(transition_duration))
         

@@ -59,10 +59,10 @@ python main.py --mode upload-only --folder output_videos/ --privacy public
 python main.py --mode upload-only --folder output_videos/ --platform instagram
 python main.py --mode upload-only --folder output_videos/ --platform all
 
-python main.py --mode script-only --idea "Why superfoods are good for us"
-python main.py --mode image-only --folder output_videos/20250127_172746
-python main.py --mode video-only --folder output_videos/20250127_172746
-python main.py --mode upload-only --folder output_videos/20250127_172746
+python main.py --mode script-only --idea "Sleep benefits"
+python main.py --mode image-only --folder output_videos\20250131_034411
+python main.py --mode video-only --folder output_videos\20250131_034411
+python main.py --mode upload-only --folder output_videos\20250131_034411 --privacy public
 
 Privacy and Terms:
 https://esper6.github.io/bettermentbotique.github.io/

@@ -4,6 +4,17 @@
 -Auto upload to YouTube
 -Auto upload to TikTok
 -Auto upload to Instagram
--Auto upload to Facebook
--Auto upload to LinkedIn
--Auto upload to Twitter
+
+https://github.com/davehague/reel-transcriber
+https://www.davehague.com/gists/5f694889f466d18c5b48fda89ddfc14a
+https://github.com/davehague/prompt-central-station
+vue
+nuxt
+supabase
+vercel
+
+api interfaces:
+huggingface
+open router
+langsmith
+evaluating prompts?
