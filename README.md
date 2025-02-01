@@ -74,7 +74,7 @@ python main.py --mode upload-only --folder output_videos/20240321_143022 --platf
 # Upload to both YouTube and Instagram
 python main.py --mode upload-only --folder output_videos/20240321_143022 --platform all
 
-##Notes:
+## Notes:
 - For full mode and script-only mode, the --idea argument is required
 - For video-only, image-only, and upload-only modes, the --folder argument should point to a timestamped directory
 - Upload-only mode will automatically find the newest video file in the specified folder

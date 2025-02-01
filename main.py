@@ -38,6 +38,11 @@ def get_newest_video(folder_path):
     video_files.sort(key=lambda x: os.path.getmtime(os.path.join(folder_path, x)), reverse=True)
     return os.path.join(folder_path, video_files[0])
 
+def append_transparency_clause(description):
+    """Add transparency clause to the end of the description"""
+    transparency_clause = "\nThis video was created with AI assistance. Learn more about the process: https://github.com/esper6/bettermentbotique"
+    return description + transparency_clause
+
 def main():
     parser = argparse.ArgumentParser(description='Social Media Video Generator')
     parser.add_argument('--mode', 
@@ -80,20 +85,27 @@ def main():
 
     if args.mode in ['full', 'script-only']:
         if not args.idea:
-            raise ValueError(f"For {args.mode} mode, you must provide an --idea")
-            
+            raise ValueError("For full and script-only modes, --idea argument is required")
+        
         print(f"\nGenerating content for idea: {args.idea}")
         output_dir = create_output_directory()
         
         # Generate script and content
         content = generate_script(args.idea)
+        
+        # Add transparency clause to description
+        content['description'] = append_transparency_clause(content['description'])
+        
         print("\nGenerated Content:")
         print(json.dumps(content, indent=2))
         
-        # Save content
-        content_path = os.path.join(output_dir, "content.json")
-        with open(content_path, "w") as f:
-            json.dump(content, f, indent=2)
+        # Save content to JSON
+        with open(os.path.join(output_dir, "content.json"), "w") as f:
+            json.dump(content, f, indent=4)
+            
+        # Save description separately for easy access
+        with open(os.path.join(output_dir, "social_description.txt"), "w") as f:
+            f.write(content['description'])
             
         if args.mode == 'script-only':
             print(f"\nScript generation complete! Files saved in: {output_dir}")
